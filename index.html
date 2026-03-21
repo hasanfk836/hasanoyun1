@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ayşegül Dünyanın En Güzel Kadını</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@600;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+
+#gw{
+  position:relative;width:100%;max-width:430px;height:100vh;
+  overflow:hidden;background:#000;touch-action:none;
+}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+/* HUD TOP */
+#hud{
+  position:absolute;top:0;left:0;right:0;
+  padding:10px 10px 0;z-index:10;pointer-events:none;
+}
+.srow{display:flex;gap:5px;}
+.spill{
+  flex:1;display:flex;align-items:center;gap:4px;
+  background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;padding:4px 7px;
+  transition:transform 0.2s;
+}
+.spill.bump{transform:scale(1.15);}
+.si{font-size:13px;}
+.sbw{flex:1;}
+.slb{font-size:8px;color:rgba(255,255,255,0.35);font-family:'Rajdhani',sans-serif;letter-spacing:1px;}
+.sb{height:4px;border-radius:2px;margin-top:2px;transition:width 0.35s;}
+.sv{font-family:'Bangers',cursive;font-size:13px;color:#fff;min-width:18px;text-align:right;}
+
+#livesBox{
+  position:absolute;top:10px;left:10px;font-size:19px;
+  z-index:11;pointer-events:none;letter-spacing:1px;
+}
+#scoreBox{
+  position:absolute;top:10px;right:10px;
+  font-family:'Bangers',cursive;font-size:20px;color:#f5c518;
+  text-shadow:0 0 12px rgba(245,197,24,0.7);letter-spacing:1px;
+  z-index:11;pointer-events:none;
+}
+#waveBox{
+  position:absolute;top:34px;right:10px;
+  font-family:'Rajdhani',sans-serif;font-size:11px;
+  color:rgba(255,255,255,0.35);letter-spacing:2px;z-index:11;pointer-events:none;
+}
+
+/* HINT */
+#hint{
+  position:absolute;bottom:8%;left:0;right:0;text-align:center;
+  font-family:'Rajdhani',sans-serif;font-size:13px;
+  color:rgba(255,255,255,0.25);pointer-events:none;z-index:10;
+  letter-spacing:2px;transition:opacity 1s;
+}
+
+/* FLOAT TEXT */
+.flt{
+  position:absolute;font-family:'Bangers',cursive;font-size:24px;
+  pointer-events:none;z-index:25;transform:translateX(-50%);
+  animation:fUp 0.9s ease forwards;
+}
+@keyframes fUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-70px)}}
+
+/* SCREENS */
+#startSc,#overSc{
+  position:absolute;inset:0;z-index:30;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,10,0.94);text-align:center;padding:30px;
+}
+#overSc{display:none;}
+.stitle{font-family:'Bangers',cursive;font-size:62px;letter-spacing:3px;line-height:1;margin-bottom:8px;}
+.stitle.gold{color:#f5c518;text-shadow:0 0 30px rgba(245,197,24,0.55);}
+.stitle.red{color:#ff4757;text-shadow:0 0 30px rgba(255,71,87,0.55);}
+.ssub{
+  font-family:'Rajdhani',sans-serif;font-size:13px;
+  color:rgba(255,255,255,0.4);margin-bottom:26px;line-height:1.8;max-width:280px;
+}
+.bbtn{
+  padding:15px 52px;background:#f5c518;color:#000;
+  font-family:'Bangers',cursive;font-size:24px;border:none;
+  border-radius:50px;cursor:pointer;letter-spacing:1px;
+  box-shadow:0 6px 24px rgba(245,197,24,0.4);
+}
+.bbtn:active{transform:scale(0.94);}
+#finScore{font-family:'Bangers',cursive;font-size:36px;color:#fff;margin-bottom:4px;}
+#finWave{font-family:'Rajdhani',sans-serif;font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px;letter-spacing:2px;}
+
+/* WAVE BANNER */
+#waveBanner{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:20;pointer-events:none;text-align:center;opacity:0;
+}
+#waveBanner.show{animation:wShow 1.6s ease forwards;}
+@keyframes wShow{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0.5)}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+  70%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+#wbText{font-family:'Bangers',cursive;font-size:48px;color:#f5c518;letter-spacing:3px;text-shadow:0 0 30px rgba(245,197,24,0.8);}
+#wbSub{font-family:'Rajdhani',sans-serif;font-size:14px;color:rgba(255,255,255,0.5);letter-spacing:2px;}
+</style>
+</head>
+<body>
+<div id="gw">
+  <canvas id="gc"></canvas>
+
+  <div id="livesBox">❤️❤️❤️</div>
+  <div id="scoreBox">0m</div>
+  <div id="waveBox">DALGA 1</div>
+
+  <div id="hud">
+    <div class="srow" id="srow"></div>
+  </div>
+
+  <div id="hint">◀ PARMAĞINI SÜRÜKLE ▶</div>
+
+  <div id="waveBanner"><div id="wbText">DALGA 1</div><div id="wbSub">HAZIROL!</div></div>
+
+  <div id="startSc">
+    <div class="stitle gold" style="font-size:38px;line-height:1.15">AYŞEGÜL<br><span style="font-size:22px;letter-spacing:2px">DÜNYANIN EN GÜZEL KADINI</span></div>
+    <p class="ssub">
+      Parmağını sürükleyerek karakteri yönlendir.<br>
+      Silah otomatik ateş eder — düşmanları vur!<br>
+      Sağ ve sol stat eşyalarından birini seç.<br>
+      Düşman çarparsa ölürsün!
+    </p>
+    <button class="bbtn" onclick="startGame()">BAŞLAT ▶</button>
+  </div>
+
+  <div id="overSc">
+    <div class="stitle red">ÖLDÜN!</div>
+    <div id="finScore">0m</div>
+    <div id="finWave">DALGA 1</div>
+    <button class="bbtn" onclick="startGame()">TEKRAR ↺</button>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────
+//  CANVAS
+// ──────────────────────────────────────────
+const canvas = document.getElementById('gc');
+const ctx    = canvas.getContext('2d');
+const GW     = document.getElementById('gw');
+
+function resize(){ canvas.width=GW.clientWidth; canvas.height=GW.clientHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+function lerp(a,b,t){ return a+(b-a)*t; }
+
+// ──────────────────────────────────────────
+//  ROAD PROJECTION
+// ──────────────────────────────────────────
+// World: z=0 horizon, z=MAX_Z at player
+const MAX_Z    = 1000;
+const PLAYER_Z = 820;
+
+function hy(){ return canvas.height * 0.37; }
+function py(){ return canvas.height * 0.82; }
+function rtop(){ return canvas.width  * 0.055; }
+function rbot(){ return canvas.width  * 0.42;  }
+
+function proj(wx, wz){
+  const t  = Math.max(0, Math.min(1, wz/MAX_Z));
+  const sx = canvas.width/2 + wx * lerp(rtop(), rbot(), t);
+  const sy = hy() + t*(py()-hy());
+  const sc = lerp(0.07, 1.0, t);
+  return {x:sx, y:sy, scale:sc, t};
+}
+
+// ──────────────────────────────────────────
+//  ROUNDED RECT HELPER
+// ──────────────────────────────────────────
+function rrect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// ──────────────────────────────────────────
+//  STAT CONFIG
+// ──────────────────────────────────────────
+const SCFG = {
+  STR:{icon:'⚔️',label:'GÜÇL',  color:'#ff4757'},
+  HP: {icon:'❤️',label:'SAĞLIK',color:'#2ed573'},
+  DEF:{icon:'🛡️',label:'ZIRH', color:'#1e90ff'},
+  SPD:{icon:'⚡',label:'HIZ',   color:'#ffa502'},
+};
+const SMAX=25;
+let stats;
+
+function buildHUD(){
+  const row=document.getElementById('srow');
+  row.innerHTML='';
+  for(const[k,c] of Object.entries(SCFG)){
+    row.innerHTML+=`
+    <div class="spill" id="pil_${k}">
+      <span class="si">${c.icon}</span>
+      <div class="sbw">
+        <div class="slb">${c.label}</div>
+        <div class="sb" id="sb_${k}" style="background:${c.color};width:40%"></div>
+      </div>
+      <span class="sv" id="sv_${k}">10</span>
+    </div>`;
+  }
+}
+buildHUD();
+
+function updateHUD(){
+  for(const[k,c] of Object.entries(SCFG)){
+    const v=stats[k];
+    document.getElementById('sb_'+k).style.width=(v/SMAX*100)+'%';
+    document.getElementById('sv_'+k).textContent=v;
+  }
+}
+
+function applyStat(sk, delta){
+  const old=stats[sk];
+  stats[sk]=Math.max(0,Math.min(SMAX,stats[sk]+delta));
+  const d=stats[sk]-old; if(!d) return;
+
+  const pil=document.getElementById('pil_'+sk);
+  pil.classList.remove('bump'); void pil.offsetWidth; pil.classList.add('bump');
+  setTimeout(()=>pil.classList.remove('bump'),250);
+
+  const el=document.createElement('div');
+  el.className='flt';
+  el.textContent=(d>0?'+':'')+d+' '+SCFG[sk].label;
+  el.style.color=d>0?'#2ed573':'#ff4757';
+  el.style.left=canvas.width/2+'px';
+  el.style.top=(py()-80)+'px';
+  GW.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+
+  updateHUD();
+}
+
+// ──────────────────────────────────────────
+//  PICKUP POOL
+// ──────────────────────────────────────────
+const PPOOL=[
+  {stat:'STR',delta:+5,plus:true, icon:'⚔️',desc:'Kılıç keskinleşti'},
+  {stat:'STR',delta:+4,plus:true, icon:'🏋️',desc:'Güç antrenmanı'},
+  {stat:'STR',delta:-3,plus:false,icon:'😴',desc:'Yoruldun'},
+  {stat:'HP', delta:+5,plus:true, icon:'💊',desc:'İksir içtin'},
+  {stat:'HP', delta:+4,plus:true, icon:'🍖',desc:'Enerji kazandın'},
+  {stat:'HP', delta:-4,plus:false,icon:'☠️',desc:'Zehirlendin'},
+  {stat:'HP', delta:-3,plus:false,icon:'🌧️',desc:'Soğuk aldın'},
+  {stat:'DEF',delta:+5,plus:true, icon:'🛡️',desc:'Zırh güçlendi'},
+  {stat:'DEF',delta:+4,plus:true, icon:'🧲',desc:'Kalkan aktif'},
+  {stat:'DEF',delta:-3,plus:false,icon:'💔',desc:'Zırh çatladı'},
+  {stat:'SPD',delta:+5,plus:true, icon:'⚡',desc:'Hız patlaması'},
+  {stat:'SPD',delta:+3,plus:true, icon:'👟',desc:'Yeni botlar'},
+  {stat:'SPD',delta:-3,plus:false,icon:'🪨',desc:'Yük ağırlaştı'},
+];
+
+// ──────────────────────────────────────────
+//  ENEMY TYPES
+// ──────────────────────────────────────────
+const ETYPES=[
+  {name:'GOBLIN',  emoji:'👺',hp:2, speed:1.6,xSz:0.17,col:'#2ed573',pts:10,wave:1},
+  {name:'KURT',    emoji:'🐺',hp:1, speed:3.4,xSz:0.14,col:'#ffa502',pts:15,wave:1},
+  {name:'TROLL',   emoji:'🧌',hp:5, speed:0.9,xSz:0.28,col:'#ff6b35',pts:30,wave:2},
+  {name:'İSKELET', emoji:'💀',hp:3, speed:2.1,xSz:0.20,col:'#a29bfe',pts:20,wave:2},
+  {name:'EJDERHA', emoji:'🐲',hp:10,speed:0.7,xSz:0.34,col:'#ff4757',pts:60,wave:3},
+  {name:'AJAN',    emoji:'🤖',hp:4, speed:2.5,xSz:0.18,col:'#00cec9',pts:35,wave:3},
+];
+
+// ──────────────────────────────────────────
+//  GAME STATE
+// ──────────────────────────────────────────
+let running=false, rafId;
+let score, wave, lives, prevWave;
+let playerX, touchX=null, touchActive=false;
+let enemies, bullets, pickups, particles;
+let shootT=0, enemyT=0, pickupT=0, roadOff=0;
+let shakeF=0, gunFlash=0, walkCyc=0;
+let choicePending=false;
+let hintVisible=true;
+const keys={};
+
+// ──────────────────────────────────────────
+//  INPUT
+// ──────────────────────────────────────────
+canvas.addEventListener('touchstart',e=>{
+  touchX=e.touches[0].clientX; touchActive=true;
+  if(hintVisible){ document.getElementById('hint').style.opacity='0'; hintVisible=false; }
+  e.preventDefault();
+},{passive:false});
+canvas.addEventListener('touchmove',e=>{ touchX=e.touches[0].clientX; e.preventDefault(); },{passive:false});
+canvas.addEventListener('touchend',()=>{ touchActive=false; },{passive:true});
+window.addEventListener('keydown',e=>{keys[e.key]=true;
+  if(hintVisible){ document.getElementById('hint').style.opacity='0'; hintVisible=false; }
+});
+window.addEventListener('keyup',e=>keys[e.key]=false);
+
+// ──────────────────────────────────────────
+//  PARTICLES
+// ──────────────────────────────────────────
+function spark(x,y,col,n=10,spd=4){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=spd*(0.4+Math.random());
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,col,sz:2.5+Math.random()*4});
+  }
+}
+
+function drawParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.14; p.life-=0.03;
+    if(p.life<=0){particles.splice(i,1);continue;}
+    ctx.save();
+    ctx.globalAlpha=p.life;
+    ctx.fillStyle=p.col;
+    ctx.shadowColor=p.col; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.sz*p.life,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ──────────────────────────────────────────
+//  DRAW ROAD  (synthwave grid)
+// ──────────────────────────────────────────
+let pulse=0;
+
+function drawRoad(){
+  const W=canvas.width, H=canvas.height;
+  const hY=hy(), pY=py(), cx=W/2;
+  pulse+=0.035;
+
+  // Sky
+  const sky=ctx.createLinearGradient(0,0,0,hY);
+  sky.addColorStop(0,'#00000a'); sky.addColorStop(1,'#0d0025');
+  ctx.fillStyle=sky; ctx.fillRect(0,0,W,hY);
+
+  // Stars
+  ctx.save();
+  for(let i=0;i<90;i++){
+    const sx=(i*137.508)%W, sy=(i*97.3)%(hY*0.92);
+    const b=0.25+0.55*(Math.sin(pulse+i*0.9)*0.5+0.5);
+    ctx.globalAlpha=b;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(sx,sy,i%6===0?1.4:0.65,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+
+  // Horizon glow
+  const hg=ctx.createRadialGradient(cx,hY,0,cx,hY,W*0.6);
+  hg.addColorStop(0,'rgba(130,0,255,0.28)'); hg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=hg; ctx.fillRect(0,hY-70,W,140);
+
+  // Ground
+  const gr=ctx.createLinearGradient(0,hY,0,H);
+  gr.addColorStop(0,'#080018'); gr.addColorStop(1,'#04000e');
+  ctx.fillStyle=gr; ctx.fillRect(0,hY,W,H-hY);
+
+  // Road trapezoid
+  const rt=rtop(), rb=rbot();
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx-rt,hY); ctx.lineTo(cx+rt,hY);
+  ctx.lineTo(cx+rb,pY); ctx.lineTo(cx-rb,pY);
+  ctx.closePath();
+  const rg=ctx.createLinearGradient(0,hY,0,pY);
+  rg.addColorStop(0,'#0e0028'); rg.addColorStop(1,'#160038');
+  ctx.fillStyle=rg; ctx.fill();
+
+  // Horizontal grid lines (moving)
+  const numH=14;
+  roadOff=(roadOff+2.5)%(H*2);
+  for(let i=0;i<numH;i++){
+    const rawT=(i/numH + roadOff/(H*2))%1;
+    const t=rawT*rawT; // ease so they bunch near player
+    const y=hY+t*(pY-hY);
+    const xL=cx-lerp(rt,rb,t), xR=cx+lerp(rt,rb,t);
+    const alp=(0.08+0.35*t)*(0.5+0.5*Math.sin(pulse*1.5-t*4));
+    ctx.strokeStyle=`rgba(220,60,200,${alp})`;
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xL,y); ctx.lineTo(xR,y); ctx.stroke();
+  }
+
+  // Vertical grid lines
+  const numV=7;
+  for(let i=0;i<=numV;i++){
+    const f=i/numV;
+    const xT=cx-rt+f*rt*2, xB=cx-rb+f*rb*2;
+    const alp=0.15+0.12*Math.sin(pulse+i*1.1);
+    ctx.strokeStyle=`rgba(160,0,255,${alp})`;
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xT,hY); ctx.lineTo(xB,pY); ctx.stroke();
+  }
+
+  // Road edges
+  ctx.strokeStyle='#dd00cc'; ctx.lineWidth=2.5;
+  ctx.shadowColor='#dd00cc'; ctx.shadowBlur=14;
+  ctx.beginPath(); ctx.moveTo(cx-rt,hY); ctx.lineTo(cx-rb,pY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+rt,hY); ctx.lineTo(cx+rb,pY); ctx.stroke();
+  ctx.shadowBlur=0;
+
+  // Center dashes
+  ctx.setLineDash([8,14]);
+  ctx.strokeStyle='rgba(245,197,24,0.18)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(cx,hY); ctx.lineTo(cx,pY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ──────────────────────────────────────────
+//  DRAW PLAYER
+// ──────────────────────────────────────────
+function drawPlayer(){
+  const{x:sx,y:sy}=proj(playerX, PLAYER_Z);
+  walkCyc+=0.2;
+  const s=1.0;
+
+  ctx.save(); ctx.translate(sx, sy);
+
+  // Shadow
+  ctx.globalAlpha=0.35; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(0,30*s,18*s,5*s,0,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+
+  // Legs
+  const lsw=Math.sin(walkCyc)*9;
+  ctx.fillStyle='#1e1e4a';
+  rrect(-9*s,14*s+lsw,8*s,18*s,3*s); ctx.fill();
+  rrect(1*s,14*s-lsw,8*s,18*s,3*s); ctx.fill();
+
+  // Body
+  ctx.fillStyle='#2e2e7a';
+  rrect(-12*s,-7*s,24*s,23*s,6*s); ctx.fill();
+  // Body glow line
+  ctx.strokeStyle='rgba(120,160,255,0.45)'; ctx.lineWidth=1.2;
+  rrect(-12*s,-7*s,24*s,23*s,6*s); ctx.stroke();
+
+  // Left arm
+  ctx.fillStyle='#2e2e7a';
+  const asw=Math.sin(walkCyc)*7;
+  rrect(-20*s,-4*s+asw,7*s,16*s,3*s); ctx.fill();
+
+  // Gun arm (right) — always extended upward
+  ctx.save();
+  ctx.translate(14*s, 0*s);
+  // Arm
+  ctx.fillStyle='#2e2e7a';
+  rrect(-3*s,-14*s,7*s,14*s,3*s); ctx.fill();
+  // Gun body
+  ctx.fillStyle='#666';
+  rrect(-4*s,-26*s,8*s,14*s,3*s); ctx.fill();
+  // Gun barrel
+  ctx.fillStyle='#888';
+  rrect(-2*s,-38*s,4*s,14*s,2*s); ctx.fill();
+  // Muzzle flash
+  if(gunFlash>0){
+    ctx.globalAlpha=gunFlash;
+    ctx.fillStyle='#fff700';
+    ctx.shadowColor='#fff700'; ctx.shadowBlur=24;
+    ctx.beginPath(); ctx.arc(0,-38*s,10*s,0,Math.PI*2); ctx.fill();
+    // Star rays
+    for(let i=0;i<6;i++){
+      const ra=i/6*Math.PI*2;
+      ctx.strokeStyle='#fff700'; ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ra)*4*s,-38*s+Math.sin(ra)*4*s);
+      ctx.lineTo(Math.cos(ra)*16*s,-38*s+Math.sin(ra)*16*s);
+      ctx.stroke();
+    }
+    ctx.shadowBlur=0; ctx.globalAlpha=1;
+    gunFlash=Math.max(0,gunFlash-0.18);
+  }
+  ctx.restore();
+
+  // Head
+  ctx.fillStyle='#d4a96a';
+  ctx.beginPath(); ctx.arc(0,-20*s,13*s,0,Math.PI*2); ctx.fill();
+
+  // Helmet
+  ctx.fillStyle='#2e2e7a';
+  ctx.beginPath();
+  ctx.ellipse(0,-26*s,13*s,9*s,0,Math.PI,0); ctx.fill();
+  // Visor glow
+  ctx.fillStyle='rgba(100,220,255,0.55)';
+  ctx.beginPath(); ctx.arc(0,-20*s,10*s,Math.PI+0.25,-0.25); ctx.fill();
+
+  ctx.restore();
+}
+
+// ──────────────────────────────────────────
+//  DRAW BULLETS
+// ──────────────────────────────────────────
+function drawBullets(){
+  for(const b of bullets){
+    const{x:sx,y:sy,scale:sc}=proj(b.x,b.z);
+    const prev=proj(b.x,b.z+28);
+    ctx.save();
+    // Trail
+    ctx.strokeStyle='rgba(255,230,30,0.35)';
+    ctx.lineWidth=3*sc; ctx.shadowColor='#ffe030'; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(prev.x,prev.y); ctx.stroke();
+    // Core
+    ctx.fillStyle='#ffe030'; ctx.shadowBlur=18;
+    ctx.beginPath(); ctx.arc(sx,sy,Math.max(2,5*sc),0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+// ──────────────────────────────────────────
+//  DRAW ENEMIES
+// ──────────────────────────────────────────
+function drawEnemies(){
+  const sorted=[...enemies].sort((a,b)=>a.z-b.z);
+  for(const e of sorted){
+    const{x:sx,y:sy,scale:sc}=proj(e.x,e.z);
+    if(sc<0.04) continue;
+    const tp=ETYPES[e.ti];
+    const fs=Math.max(12,58*sc);
+
+    ctx.save(); ctx.translate(sx,sy);
+
+    // Shadow
+    ctx.globalAlpha=0.3*sc; ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(0,10*sc,22*sc,5*sc,0,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Emoji
+    ctx.font=`${fs}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.shadowColor=tp.col; ctx.shadowBlur=22*sc;
+    ctx.fillText(tp.emoji,0,0);
+    ctx.shadowBlur=0;
+
+    // HP bar
+    if(sc>0.2){
+      const bw=50*sc, bh=6*sc, by=-fs*0.6-8*sc;
+      // track
+      ctx.fillStyle='rgba(0,0,0,0.5)';
+      rrect(-bw/2,by,bw,bh,3); ctx.fill();
+      // fill
+      const frac=Math.max(0,e.hp/tp.hp);
+      ctx.fillStyle=tp.col; ctx.shadowColor=tp.col; ctx.shadowBlur=6*sc;
+      rrect(-bw/2,by,bw*frac,bh,3); ctx.fill();
+      ctx.shadowBlur=0;
+      // name
+      if(sc>0.45){
+        ctx.fillStyle='rgba(255,255,255,0.65)';
+        ctx.font=`bold ${Math.max(8,11*sc)}px 'Rajdhani',sans-serif`;
+        ctx.fillText(tp.name,0,by-9*sc);
+      }
+    }
+
+    // Hit flicker
+    if(e.hitFlash>0){
+      ctx.globalAlpha=e.hitFlash*0.5;
+      ctx.fillStyle='#fff';
+      ctx.beginPath(); ctx.arc(0,0,fs*0.6,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1;
+      e.hitFlash=Math.max(0,e.hitFlash-0.15);
+    }
+
+    ctx.restore();
+  }
+}
+
+// ──────────────────────────────────────────
+//  DRAW PICKUPS (stat choice cards)
+// ──────────────────────────────────────────
+function drawPickups(){
+  const sorted=[...pickups].sort((a,b)=>a.z-b.z);
+  for(const p of sorted){
+    const{x:sx,y:sy,scale:sc}=proj(p.x,p.z);
+    if(sc<0.05) continue;
+
+    const col=p.plus?'#2ed573':'#ff4757';
+    const cw=72*sc, ch=82*sc;
+
+    ctx.save(); ctx.translate(sx,sy);
+
+    // Card body
+    ctx.globalAlpha=0.88;
+    ctx.fillStyle='rgba(4,2,20,0.85)';
+    rrect(-cw/2,-ch/2,cw,ch,9*sc); ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=2*sc;
+    ctx.shadowColor=col; ctx.shadowBlur=14*sc;
+    rrect(-cw/2,-ch/2,cw,ch,9*sc); ctx.stroke();
+    ctx.shadowBlur=0;
+
+    // Top stripe
+    ctx.globalAlpha=0.25; ctx.fillStyle=col;
+    rrect(-cw/2,-ch/2,cw,11*sc,[9*sc,9*sc,0,0]); ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Icon
+    const ifs=Math.max(10,30*sc);
+    ctx.font=`${ifs}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.icon,0,-10*sc);
+
+    // Delta
+    ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=8*sc;
+    ctx.font=`bold ${Math.max(8,19*sc)}px 'Bangers',cursive`;
+    ctx.fillText((p.delta>0?'+':'')+p.delta,0,14*sc);
+    ctx.shadowBlur=0;
+
+    // Stat name
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.font=`${Math.max(6,9*sc)}px 'Rajdhani',sans-serif`;
+    ctx.fillText(SCFG[p.stat].label,0,28*sc);
+
+    ctx.restore();
+  }
+}
+
+// ──────────────────────────────────────────
+//  SPAWN
+// ──────────────────────────────────────────
+function spawnEnemy(){
+  const avail=ETYPES.filter(t=>t.wave<=wave);
+  const tp=avail[Math.floor(Math.random()*avail.length)];
+  const ti=ETYPES.indexOf(tp);
+  const x=(Math.random()*1.3)-0.65;
+  enemies.push({x,z:0,hp:tp.hp,maxHp:tp.hp,ti,hitFlash:0});
+}
+
+function spawnPickupPair(){
+  if(choicePending) return;
+  choicePending=true;
+  const pool=[...PPOOL].sort(()=>Math.random()-0.5);
+  const plus=pool.filter(c=>c.plus);
+  const minus=pool.filter(c=>!c.plus);
+  const lIsPlus=Math.random()<0.5;
+  const lc=lIsPlus?plus[0]:minus[0];
+  const rc=lIsPlus?minus[0]:plus[0];
+  pickups.push({x:-0.43,z:0,...lc,pid:Math.random()});
+  pickups.push({x:+0.43,z:0,...rc,pid:Math.random()});
+}
+
+// ──────────────────────────────────────────
+//  WAVE BANNER
+// ──────────────────────────────────────────
+function showWaveBanner(w){
+  const b=document.getElementById('waveBanner');
+  document.getElementById('wbText').textContent='DALGA '+w;
+  document.getElementById('wbSub').textContent=w===1?'HAZIROL!':'SEVİYE ATLADI!';
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+
+// ──────────────────────────────────────────
+//  UPDATE
+// ──────────────────────────────────────────
+function update(){
+  const W=canvas.width;
+  const mspd=0.020*(1+stats.SPD/14);
+  const BSPD=18+stats.SPD*0.4;
+
+  // ── PLAYER MOVEMENT ──
+  // Parmak karakterin sağında mı solunda mı → o yönde tam hızda git
+  if(touchActive && touchX!==null){
+    const playerScreenX = proj(playerX, PLAYER_Z).x;
+    if(touchX < playerScreenX - 8)       playerX -= mspd;
+    else if(touchX > playerScreenX + 8)  playerX += mspd;
+  }
+  if(keys['ArrowLeft'])  playerX-=mspd;
+  if(keys['ArrowRight']) playerX+=mspd;
+  playerX=Math.max(-0.84,Math.min(0.84,playerX));
+
+  // ── SHOOT ──
+  const sInt=Math.max(10,26-Math.floor(stats.SPD/2.5));
+  if(++shootT>=sInt){
+    shootT=0;
+    bullets.push({x:playerX,z:PLAYER_Z});
+    gunFlash=1.0;
+  }
+
+  const dmg=1+Math.floor(stats.STR/7);
+
+  // ── MOVE BULLETS ──
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.z-=BSPD;
+    if(b.z<=0){bullets.splice(i,1);continue;}
+
+    // Hit enemy?
+    let hit=false;
+    for(let j=enemies.length-1;j>=0;j--){
+      const e=enemies[j];
+      const tp=ETYPES[e.ti];
+      if(Math.abs(b.z-e.z)<55 && Math.abs(b.x-e.x)<tp.xSz+0.04){
+        e.hp-=dmg; e.hitFlash=1.0;
+        const{x:ex,y:ey,scale:esc}=proj(e.x,e.z);
+        spark(ex,ey,tp.col,6,3*esc);
+        score+=2;
+        bullets.splice(i,1); hit=true;
+        if(e.hp<=0){
+          spark(ex,ey,tp.col,16,5*esc);
+          spark(ex,ey,'#fff',8,4*esc);
+          score+=tp.pts;
+          enemies.splice(j,1);
+        }
+        break;
+      }
+    }
+    if(hit) continue;
+  }
+
+  // ── MOVE ENEMIES ──
+  const baseSpd=1.0+wave*0.35;
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    const tp=ETYPES[e.ti];
+    e.z+=tp.speed*baseSpd;
+
+    if(e.z>=PLAYER_Z-20){
+      if(Math.abs(e.x-playerX)<tp.xSz+0.18){
+        // HIT PLAYER
+        const{x:px2,y:py2}=proj(playerX,PLAYER_Z);
+        spark(px2,py2-20,'#ff4757',22,6);
+        lives--;
+        stats.HP=Math.max(0,stats.HP-3);
+        updateHUD();
+        updateLives();
+        enemies.splice(i,1);
+        shakeF=14;
+        if(lives<=0 || stats.HP<=0){ endGame(); return; }
+      } else {
+        enemies.splice(i,1);
+      }
+    }
+  }
+
+  // ── MOVE PICKUPS ──
+  const pspd=1.4+wave*0.25;
+  for(let i=pickups.length-1;i>=0;i--){
+    const p=pickups[i];
+    p.z+=pspd;
+    if(p.z>=PLAYER_Z-50 && Math.abs(p.x-playerX)<0.3){
+      applyStat(p.stat,p.delta);
+      pickups.splice(i,1); continue;
+    }
+    if(p.z>=PLAYER_Z+120){ pickups.splice(i,1); }
+  }
+  if(pickups.length===0) choicePending=false;
+
+  // ── SPAWN TIMERS ──
+  const eInt=Math.max(40,110-wave*12);
+  if(++enemyT>=eInt){
+    enemyT=0;
+    spawnEnemy();
+    if(wave>=2 && Math.random()<0.35) spawnEnemy();
+    if(wave>=3 && Math.random()<0.2)  spawnEnemy();
+  }
+
+  if(++pickupT>=210){ pickupT=0; spawnPickupPair(); }
+
+  // ── SCORE / WAVE ──
+  score+=1;
+  const newWave=Math.floor(score/800)+1;
+  if(newWave!==wave){ wave=newWave; showWaveBanner(wave); }
+
+  // ── SCREEN SHAKE ──
+  if(shakeF>0){
+    shakeF--;
+    canvas.style.transform=`translateX(${(Math.random()-0.5)*10}px)`;
+  } else { canvas.style.transform=''; }
+
+  // ── HUD ──
+  document.getElementById('scoreBox').textContent=Math.floor(score/10)+'m';
+  document.getElementById('waveBox').textContent='DALGA '+wave;
+}
+
+function updateLives(){
+  document.getElementById('livesBox').textContent='❤️'.repeat(Math.max(0,lives));
+}
+
+// ──────────────────────────────────────────
+//  GAME LOOP
+// ──────────────────────────────────────────
+function loop(){
+  if(!running) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawRoad();
+  drawPickups();
+  drawEnemies();
+  drawBullets();
+  drawPlayer();
+  drawParticles();
+  update();
+  rafId=requestAnimationFrame(loop);
+}
+
+// ──────────────────────────────────────────
+//  START / END
+// ──────────────────────────────────────────
+function startGame(){
+  stats={STR:10,HP:10,DEF:10,SPD:10};
+  score=0; wave=1; prevWave=1; lives=3;
+  playerX=0;
+  enemies=[]; bullets=[]; pickups=[]; particles=[];
+  shootT=0; enemyT=0; pickupT=100;
+  shakeF=0; gunFlash=0; walkCyc=0; pulse=0; roadOff=0;
+  touchActive=false; choicePending=false;
+
+  document.getElementById('startSc').style.display='none';
+  document.getElementById('overSc').style.display='none';
+  document.getElementById('hint').style.opacity='1';
+  hintVisible=true;
+
+  updateHUD(); updateLives();
+  showWaveBanner(1);
+
+  running=true;
+  if(rafId) cancelAnimationFrame(rafId);
+  loop();
+}
+
+function endGame(){
+  running=false;
+  canvas.style.transform='';
+  document.getElementById('finScore').textContent=Math.floor(score/10)+'m ilerledin';
+  document.getElementById('finWave').textContent='DALGA '+wave+" AŞILDI";
+  document.getElementById('overSc').style.display='flex';
+}
+</script>
+</body>
+</html>
