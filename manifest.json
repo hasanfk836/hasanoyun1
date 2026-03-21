@@ -1,0 +1,21 @@
+{
+  "name": "Ayşegül Dünyanın En Güzel Kadını",
+  "short_name": "Ayşegül",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#f5c518",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
