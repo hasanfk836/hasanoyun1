@@ -2,7 +2,7 @@
   "name": "Kutup Et Tycoon",
   "short_name": "Et Tycoon",
   "description": "Kutup ayılarıyla savaş, et topla, sat ve işletmeni büyüt!",
-  "start_url": "./arctic_meat_tycoon.html",
+  "start_url": "./index.html",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#0a0a1a",
